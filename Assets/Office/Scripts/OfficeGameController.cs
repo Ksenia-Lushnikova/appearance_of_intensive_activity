@@ -43,14 +43,9 @@ public sealed class OfficeGameController : MonoBehaviour
     [Header("Tunable shift")]
     [Min(30f)] public float shiftDurationSeconds = 180f;
     [Range(0f, 100f)] public float startingStress = 30f;
-    [Range(0f, 100f)] public float startingProductivity = 65f;
+    [Range(0f, 100f)] public float startingProductivity = 66.67f;
     public float workStressPerSecond = 0.78f;
     public float restStressPerSecond = 1.18f;
-    public float workProductivityPerSecond = 0.82f;
-    public float watchedWorkProductivityPerSecond = 1.35f;
-    public float restProductivityPerSecond = 0.38f;
-    public float idleProductivityPerSecond = 2f;
-    public float capDecayPerSecond = 9f;
 
     [Header("Solitaire bonus")]
     [Range(0f, 1f)] public float solitaireBonusChance = 0.25f;
@@ -74,6 +69,8 @@ public sealed class OfficeGameController : MonoBehaviour
     public bool IsPaused => options != null && options.IsOpen;
 
     private const float BonusNoticeDuration = 1f;
+    private const float ProductivityStep = 100f / 3f;
+
     private float elapsedSeconds;
     private float caughtAt;
     private int solitaireMoves;
@@ -129,7 +126,7 @@ public sealed class OfficeGameController : MonoBehaviour
         {
             Finish(false, "ВЫГОРАНИЕ", "Стресс достиг 100%. Персонаж написал заявление об увольнении по собственному.");
         }
-        else if (Productivity <= 0f)
+        else if (Productivity <= 0.1f)
         {
             Finish(false, "УВОЛЬНЕНИЕ", "Продуктивность упала до нуля. Вас попросили освободить рабочее место.");
         }
@@ -173,27 +170,13 @@ public sealed class OfficeGameController : MonoBehaviour
         if (IsResting)
         {
             Stress -= restStressPerSecond * delta;
-            Productivity -= restProductivityPerSecond * delta;
         }
         else if (working)
         {
             Stress += workStressPerSecond * delta;
-            float productivityRate = BossWatching
-                ? watchedWorkProductivityPerSecond
-                : workProductivityPerSecond;
-            Productivity += productivityRate * delta;
-        }
-        else
-        {
-            Productivity -= idleProductivityPerSecond * delta;
         }
 
         Stress = Mathf.Clamp(Stress, 0f, 100f);
-        Productivity = Mathf.Clamp(Productivity, 0f, 100f);
-
-        float cap = OfficeBalance.ProductivityCap(Reprimands);
-        if (Productivity > cap)
-            Productivity = Mathf.MoveTowards(Productivity, cap, capDecayPerSecond * delta);
     }
 
     private IEnumerator BossRoutine()
@@ -227,6 +210,14 @@ public sealed class OfficeGameController : MonoBehaviour
             }
 
             BossWatching = false;
+
+            if (!caughtThisVisit && !GameEnded)
+            {
+                Productivity = Mathf.Clamp(Productivity + ProductivityStep, 0f, 100f);
+                ShowMessage("Босс доволен вашей работой! Продуктивность +1/3.", 2.5f);
+                UpdateInterface();
+            }
+
             if (caughtThisVisit)
             {
                 float remainingReaction = 2.6f - (Time.time - caughtAt);
@@ -246,15 +237,20 @@ public sealed class OfficeGameController : MonoBehaviour
         caughtThisVisit = true;
         caughtAt = Time.time;
         Reprimands++;
+
+        Productivity = Mathf.Clamp(Productivity - ProductivityStep, 0f, 100f);
+
         ShowAngryBoss();
         SetResting(false, false);
         if (Reprimands < 3)
             OfficeAudio.Play(OfficeAudio.Cue.Warning);
 
-        if (Reprimands == 1)
-            ShowMessage("ВЫГОВОР 1/3: потолок продуктивности снижен до 67%.", 3.6f);
+        if (Productivity <= 0.1f)
+            ShowMessage("Продуктивность на нуле! Вы уволены.", 3.6f);
+        else if (Reprimands == 1)
+            ShowMessage("ВЫГОВОР 1/3: продуктивность снижена на 1/3.", 3.6f);
         else if (Reprimands == 2)
-            ShowMessage("ВЫГОВОР 2/3: потолок 33%, премия снята.", 3.6f);
+            ShowMessage("ВЫГОВОР 2/3: продуктивность снижена на 1/3, премия снята.", 3.6f);
         else
             ShowMessage("ВЫГОВОР 3/3: приготовьтесь покинуть офис.", 3.6f);
 
@@ -407,7 +403,7 @@ public sealed class OfficeGameController : MonoBehaviour
             statusText.text =
                 $"РЕЖИМ: {mode}\n" +
                 $"СТРЕСС: {Stress:0}%\n" +
-                $"ПРОДУКТИВНОСТЬ: {Productivity:0}% (МАКС. {OfficeBalance.ProductivityCap(Reprimands):0}%)\n" +
+                $"ПРОДУКТИВНОСТЬ: {Productivity:0}%\n" +
                 $"ВЫГОВОРЫ: {Reprimands}/3   ПРЕМИЯ: {premium}";
         }
 
