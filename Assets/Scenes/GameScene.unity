@@ -849,11 +849,6 @@ MonoBehaviour:
   startingProductivity: 65
   workStressPerSecond: 0.78
   restStressPerSecond: 1.18
-  workProductivityPerSecond: 0.82
-  watchedWorkProductivityPerSecond: 1.35
-  restProductivityPerSecond: 0.38
-  idleProductivityPerSecond: 2
-  capDecayPerSecond: 9
   solitaireBonusChance: 0.25
   solitaireBonusStress: 3
   solitaireAttemptInterval: 2
@@ -3075,7 +3070,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 1
-  m_FillAmount: 0.5
+  m_FillAmount: 0.67
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
@@ -3296,7 +3291,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 60
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -6765,7 +6760,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 58
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -8287,7 +8282,7 @@ MonoBehaviour:
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 1
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
